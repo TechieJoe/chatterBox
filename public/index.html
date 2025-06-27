@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatterBox Pro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    :root {
+      --primary: #6a11cb;
+      --primary-dark: #2575fc;
+      --sender-bg: #e3f2fd;
+      --receiver-bg: #f5f5f5;
+      --system-color: #666;
+      --input-bg: #f0f0f0;
+      --border-color: #ddd;
+      --error-color: #ff5252;
+      --success-color: #4caf50;
+      --text-dark: #333;
+      --text-light: #777;
+      --online: #4caf50;
+      --offline: #f44336;
+      --background: #f8f9fa;
+      --delete-color: #ff6b6b;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .chat-container {
+      width: 100%;
+      max-width: 1000px;
+      height: 90vh;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Header Styles */
+    .chat-header {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .logo h1 {
+      font-weight: 600;
+      font-size: 1.8rem;
+    }
+    
+    .logo-icon {
+      font-size: 1.5rem;
+    }
+    
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--online);
+    }
+    
+    /* Main Content */
+    .chat-main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: #f8f9fa;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .user-profile {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+    
+    .user-info h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    
+    .user-info p {
+      font-size: 0.85rem;
+      color: var(--text-light);
+    }
+    
+    .online-users {
+      padding: 20px 15px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    .online-users h3 {
+      margin-bottom: 15px;
+      font-size: 1rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .user-list {
+      list-style: none;
+    }
+    
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .user-item:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .user-item.active {
+      background: rgba(106, 17, 203, 0.1);
+    }
+    
+    .user-item .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .user-item .details {
+      flex: 1;
+    }
+    
+    .user-item .name {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    
+    .user-item .status {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--online);
+    }
+    
+    /* Chat Area */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background-color: var(--background);
+    }
+    
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f0f0f0" opacity="0.1"/><path d="M30,30 Q50,20 70,30 T90,50 T70,70 T50,80 T30,70 T10,50 T30,30" fill="none" stroke="%23e0e0e0" stroke-width="0.5" opacity="0.3"/></svg>');
+      background-size: 200px;
+    }
+    
+    .message {
+      max-width: 75%;
+      padding: 15px;
+      border-radius: 18px;
+      position: relative;
+      animation: fadeIn 0.3s ease-out;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      word-wrap: break-word;
+      line-height: 1.4;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .sender {
+      align-self: flex-end;
+      background-color: var(--sender-bg);
+      border-bottom-right-radius: 5px;
+      color: var(--text-dark);
+    }
+    
+    .receiver {
+      align-self: flex-start;
+      background-color: var(--receiver-bg);
+      border-bottom-left-radius: 5px;
+      color: var(--text-dark);
+    }
+    
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    
+    .sender-name {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .message-time {
+      color: var(--text-light);
+      font-size: 0.75rem;
+      margin-left: 10px;
+    }
+    
+    .message-content {
+      font-size: 0.95rem;
+    }
+    
+    .system-message {
+      align-self: center;
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text-light);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin: 10px 0;
+    }
+    
+    .typing-indicator {
+      align-self: flex-start;
+      background-color: var(--receiver-bg);
+      color: var(--text-light);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-style: italic;
+      margin-bottom: 10px;
+      display: none;
+    }
+    
+    /* Input Area */
+    .input-area {
+      padding: 15px;
+      background: white;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+    }
+    
+    .message-input {
+      flex: 1;
+      padding: 12px 18px;
+      border: none;
+      background: var(--input-bg);
+      border-radius: 25px;
+      font-size: 1rem;
+      outline: none;
+      transition: box-shadow 0.3s;
+    }
+    
+    .message-input:focus {
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+    
+    .action-button {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      font-size: 1.1rem;
+    }
+    
+    .action-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 10px rgba(106, 17, 203, 0.3);
+    }
+    
+    .action-button:active {
+      transform: translateY(0);
+    }
+    
+    .emoji-button {
+      background: var(--input-bg);
+      color: var(--primary);
+    }
+    
+    /* Welcome Screen */
+    .welcome-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      height: 100%;
+    }
+    
+    .welcome-icon {
+      font-size: 4rem;
+      color: var(--primary);
+      margin-bottom: 20px;
+    }
+    
+    .welcome-title {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      color: var(--text-dark);
+      font-weight: 600;
+    }
+    
+    .welcome-text {
+      color: var(--text-light);
+      margin-bottom: 30px;
+      max-width: 500px;
+      line-height: 1.6;
+    }
+    
+    .start-button {
+      background: linear-gradient(to right, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      padding: 12px 35px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .start-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 7px 15px rgba(106, 17, 203, 0.4);
+    }
+    
+    /* Connection Status */
+    .connection-status {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .delete-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(0, 0, 0, 0.05);
+      border: none;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s;
+      color: var(--delete-color);
+    }
+    
+    .message:hover .delete-btn {
+      opacity: 1;
+    }
+    
+    .delete-btn:hover {
+      background: rgba(255, 107, 107, 0.2);
+    }
+    
+    /* Username Form */
+    .username-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 400px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+    
+    .form-label {
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: var(--text-dark);
+    }
+    
+    .form-input {
+      padding: 12px 15px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .error-message {
+      color: var(--error-color);
+      min-height: 20px;
+      font-size: 0.9rem;
+      margin-top: 5px;
+    }
+    
+    .server-info {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .chat-container {
+        height: 95vh;
+        border-radius: 15px;
+      }
+      
+      .sidebar {
+        width: 70px;
+      }
+      
+      .user-profile .user-info,
+      .online-users h3 span,
+      .user-item .details {
+        display: none;
+      }
+      
+      .online-users {
+        padding: 10px;
+      }
+      
+      .user-item {
+        justify-content: center;
+      }
+      
+      .message {
+        max-width: 85%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="logo">
+        <i class="fas fa-comments logo-icon"></i>
+        <h1>ChatterBox Pro</h1>
+      </div>
+      <div class="status-indicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Disconnected</span>
+      </div>
+    </div>
+    
+    <div class="chat-main">
+      <div class="sidebar">
+        <div class="user-profile">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-info">
+            <h2 id="usernameDisplay">Guest</h2>
+            <p id="userStatus">Offline</p>
+          </div>
+        </div>
+        
+        <div class="online-users">
+          <h3><i class="fas fa-user-friends"></i> <span>Online Users</span></h3>
+          <ul class="user-list" id="userList">
+            <!-- Users will be added here dynamically -->
+          </ul>
+        </div>
+      </div>
+      
+      <div class="chat-area">
+        <div class="chat-messages" id="chatMessages">
+          <div class="welcome-screen" id="welcomeScreen">
+            <i class="fas fa-comment-dots welcome-icon"></i>
+            <h2 class="welcome-title">Welcome to ChatterBox Pro</h2>
+            <p class="welcome-text">Enter your username to start chatting</p>
+            
+            <div class="username-form">
+              <div class="form-group">
+                <label class="form-label" for="usernameInput">Username</label>
+                <input type="text" class="form-input" id="usernameInput" placeholder="Enter your name">
+                <div class="error-message" id="usernameError"></div>
+              </div>
+              
+              <button class="start-button" id="connectButton">
+                <i class="fas fa-plug"></i> Connect & Start Chatting
+              </button>
+              
+              <div class="server-info">
+                <i class="fas fa-server"></i> Connecting to: <span id="serverUrl">http://localhost:3000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+          <span id="typingText"></span> is typing...
+        </div>
+        
+        <div class="input-area">
+          <input type="text" class="message-input" id="messageInput" placeholder="Type a message..." disabled>
+          <button class="action-button emoji-button" id="emojiButton">
+            <i class="far fa-smile"></i>
+          </button>
+          <button class="action-button" id="sendButton" disabled>
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const connectButton = document.getElementById('connectButton');
+    const usernameInput = document.getElementById('usernameInput');
+    const usernameError = document.getElementById('usernameError');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    const userAvatar = document.getElementById('userAvatar');
+    const userStatus = document.getElementById('userStatus');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const chatMessages = document.getElementById('chatMessages');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const typingText = document.getElementById('typingText');
+    const userList = document.getElementById('userList');
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const emojiButton = document.getElementById('emojiButton');
+    const serverUrlDisplay = document.getElementById('serverUrl');
+    
+    // Chat state
+    let username = '';
+    let socket = null;
+    let connected = false;
+    let users = [];
+    let typingTimeout;
+    let messageCounter = 0;
+    const SERVER_URL = 'http://localhost:3000';
+    
+    // Set server URL display
+    serverUrlDisplay.textContent = SERVER_URL;
+    
+    // Update connection status
+    function updateStatus(text, color) {
+      statusText.textContent = text;
+      statusDot.style.backgroundColor = color;
+    }
+    
+    // Add system message
+    function showSystemMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'system-message';
+      div.textContent = text;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Update user list
+    function updateUserList(usernames) {
+      userList.innerHTML = '';
+      users = usernames;
+      
+      usernames.forEach(user => {
+        const li = document.createElement('li');
+        li.className = 'user-item';
+        
+        li.innerHTML = `
+          <div class="avatar">${user.charAt(0).toUpperCase()}</div>
+          <div class="details">
+            <div class="name">${user}</div>
+            <div class="status"><span class="status-dot" style="background-color: var(--online)"></span> Online</div>
+          </div>
+        `;
+        
+        userList.appendChild(li);
+      });
+    }
+    
+    // Add chat message
+    function addMessage(id, sender, text, time, isCurrentUser = false) {
+      const div = document.createElement('div');
+      div.className = `message ${isCurrentUser ? 'sender' : 'receiver'}`;
+      div.dataset.messageId = id;
+      
+      div.innerHTML = `
+        <div class="message-header">
+          <span class="sender-name">${sender}</span>
+          <span class="message-time">${time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        <div class="message-content">${text}</div>
+      `;
+      
+      // Add delete button for current user's messages
+      if (isCurrentUser) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.onclick = () => deleteMessage(id);
+        div.appendChild(deleteBtn);
+      }
+      
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Delete message
+    function deleteMessage(id) {
+      // Remove from UI
+      const messageElement = document.querySelector(`[data-message-id="${id}"]`);
+      if (messageElement) {
+        messageElement.remove();
+      }
+      
+      // Notify server (in a real app)
+      if (socket) {
+        socket.emit('deleteMessage', { messageId: id });
+      }
+    }
+    
+    // Connect to server
+    function connectToServer() {
+      const usernameValue = usernameInput.value.trim();
+      
+      if (!usernameValue) {
+        usernameError.textContent = 'Please enter a username';
+        return;
+      }
+      
+      if (usernameValue.length < 3) {
+        usernameError.textContent = 'Username must be at least 3 characters';
+        return;
+      }
+      
+      username = usernameValue;
+      usernameError.textContent = '';
+      updateStatus('Connecting', 'orange');
+      
+      try {
+        // Create socket connection
+        socket = io(SERVER_URL, {
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000,
+          transports: ['websocket'],
+          autoConnect: true
+        });
+        
+        // Connection established
+        socket.on('connect', () => {
+          console.log('Connected to server');
+          updateStatus('Connected', 'green');
+          showSystemMessage('Connected to server!');
+          connected = true;
+          
+          // Enable UI
+          messageInput.disabled = false;
+          sendButton.disabled = false;
+          messageInput.focus();
+          
+          // Set user info
+          usernameDisplay.textContent = username;
+          userAvatar.textContent = username.charAt(0).toUpperCase();
+          userStatus.textContent = 'Online';
+          
+          // Hide welcome screen
+          welcomeScreen.style.display = 'none';
+          
+          // Join chat
+          socket.emit('join', username);
+          showSystemMessage(`Welcome, ${username}! You are now connected.`);
+        });
+        
+        // Connection error
+        socket.on('connect_error', (err) => {
+          console.error('Connection error:', err);
+          usernameError.textContent = `Failed to connect: ${err.message}`;
+          updateStatus('Connection Failed', 'red');
+          connected = false;
+        });
+        
+        // User list update
+        socket.on('userList', (usernames) => {
+          updateUserList(usernames);
+        });
+        
+        // Receive messages
+        socket.on('receiveMessage', ({ id, sender, message, time }) => {
+          // Only display if not from current user (current user messages are added locally)
+          if (sender !== username) {
+            addMessage(id, sender, message, time, false);
+          }
+        });
+        
+        // System messages
+        socket.on('systemMessage', (msg) => {
+          showSystemMessage(msg);
+        });
+        
+        // Typing indicator
+        socket.on('typing', ({ username: typingUser }) => {
+          if (typingUser !== username) {
+            typingIndicator.style.display = 'block';
+            typingText.textContent = typingUser;
+            
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+              typingIndicator.style.display = 'none';
+            }, 2000);
+          }
+        });
+        
+        // Disconnection
+        socket.on('disconnect', (reason) => {
+          updateStatus('Disconnected', 'red');
+          showSystemMessage('Disconnected from server');
+          connected = false;
+        });
+        
+        // Reconnection
+        socket.on('reconnect', (attempt) => {
+          updateStatus('Reconnected', 'green');
+          showSystemMessage('Reconnected to server');
+          connected = true;
+          
+          // Rejoin with username
+          socket.emit('join', username);
+        });
+        
+        // Reconnection failed
+        socket.on('reconnect_failed', () => {
+          updateStatus('Reconnect Failed', 'red');
+          showSystemMessage('Unable to reconnect to server');
+          connected = false;
+        });
+        
+        // Handle message deletion
+        socket.on('deleteMessage', ({ messageId }) => {
+          const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+          if (messageElement) {
+            messageElement.remove();
+          }
+        });
+        
+      } catch (error) {
+        usernameError.textContent = `Connection error: ${error.message}`;
+        updateStatus('Connection Error', 'red');
+        connected = false;
+      }
+    }
+    
+    // Send message
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message || !connected) return;
+      
+      // Generate unique ID for the message
+      const messageId = `msg-${Date.now()}-${messageCounter++}`;
+      
+      // Add message to chat
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      addMessage(messageId, username, message, time, true);
+      
+      // Send message via socket
+      socket.emit('sendMessage', { id: messageId, message });
+      
+      // Clear input
+      messageInput.value = '';
+      messageInput.focus();
+    }
+    
+    // Event listeners
+    connectButton.addEventListener('click', connectToServer);
+    
+    usernameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        connectToServer();
+      }
+    });
+    
+    messageInput.addEventListener('input', () => {
+      if (messageInput.value.trim() && connected) {
+        socket.emit('typing', { username });
+      }
+    });
+    
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+    
+    sendButton.addEventListener('click', sendMessage);
+    
+    // Emoji button functionality
+    emojiButton.addEventListener('click', () => {
+      if (!messageInput.disabled) {
+        messageInput.value += '😊';
+        messageInput.focus();
+      }
+    });
+    
+    // Initialize the app
+    updateStatus('Disconnected', 'red');
+  </script>
+</body>
+</html>
