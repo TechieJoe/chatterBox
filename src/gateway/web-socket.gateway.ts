@@ -39,24 +39,29 @@ export class ChatGateway
       this.broadcastUserList();
       this.server.emit('systemMessage', `${username} left the chat.`);
       this.logger.log(`Client disconnected: ${username} (${client.id})`);
+    } else {
+      this.logger.log(`Unknown client disconnected: ${client.id}`);
     }
   }
 
   @SubscribeMessage('join')
   handleJoin(client: Socket, username: string) {
     const existingSocket = this.sockets.get(username);
-    
+
     if (existingSocket && existingSocket !== client.id) {
-      // Disconnect old socket if same user tries to join from another tab/window
       const oldClient = this.server.sockets.sockets.get(existingSocket);
-      if (oldClient) oldClient.disconnect();
+      if (oldClient) {
+        oldClient.disconnect();
+      }
     }
 
     this.users.set(client.id, username);
     this.sockets.set(username, client.id);
 
     this.logger.log(`${username} joined with socket ${client.id}`);
-    this.server.emit('systemMessage', `${username} joined the chat`);
+
+    // Use broadcast to avoid double-message issue
+    client.broadcast.emit('systemMessage', `${username} joined the chat`);
     this.broadcastUserList();
   }
 
@@ -75,7 +80,8 @@ export class ChatGateway
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    this.server.emit('receiveMessage', msg);
+    // Only send to others
+    client.broadcast.emit('receiveMessage', msg);
   }
 
   @SubscribeMessage('typing')
