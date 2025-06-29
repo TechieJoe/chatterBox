@@ -1,118 +1,95 @@
 import {
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  SubscribeMessage,
+  OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  MessageBody,
-  ConnectedSocket,
-  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-
-interface ClientData {
-  username: string;
-  lastMessageTime: number;
-}
+import { Logger } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
     origin: '*',
-    methods: ['GET', 'POST']
   },
-  pingInterval: 10000,
-  pingTimeout: 5000,
-  transports: ['websocket']
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server: Server;
+export class ChatGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
+  @WebSocketServer() server: Server;
+  private logger = new Logger('ChatGateway');
 
-  private clients = new Map<string, ClientData>();
+  private users = new Map<string, string>(); // socketId => username
+  private sockets = new Map<string, string>(); // username => socketId
+
+  afterInit(server: Server) {
+    this.logger.log('WebSocket initialized');
+  }
 
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+    this.logger.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
-    const user = this.clients.get(client.id);
-    if (user) {
-      this.server.emit('systemMessage', `${user.username} left the chat`);
-      this.clients.delete(client.id);
-      this.updateUserList();
+    const username = this.users.get(client.id);
+    if (username) {
+      this.users.delete(client.id);
+      this.sockets.delete(username);
+      this.broadcastUserList();
+      this.server.emit('systemMessage', `${username} left the chat.`);
+      this.logger.log(`Client disconnected: ${username} (${client.id})`);
     }
   }
 
   @SubscribeMessage('join')
-  handleJoin(@MessageBody() username: string, @ConnectedSocket() client: Socket) {
-    if (!username || typeof username !== 'string' || username.trim() === '') {
-      throw new WsException('Invalid username');
-    }
-
-    // Prevent duplicate joins
-    if (this.clients.has(client.id)) {
-      return { status: 'error', message: 'Already joined' };
-    }
-
-    // Check if username is already taken
-    const existingUser = Array.from(this.clients.values()).find(u => u.username === username);
-    if (existingUser) {
-      throw new WsException('Username is already taken');
-    }
-
-    this.clients.set(client.id, { 
-      username: username.trim(), 
-      lastMessageTime: 0 
-    });
+  handleJoin(client: Socket, username: string) {
+    const existingSocket = this.sockets.get(username);
     
+    if (existingSocket && existingSocket !== client.id) {
+      // Disconnect old socket if same user tries to join from another tab/window
+      const oldClient = this.server.sockets.sockets.get(existingSocket);
+      if (oldClient) oldClient.disconnect();
+    }
+
+    this.users.set(client.id, username);
+    this.sockets.set(username, client.id);
+
+    this.logger.log(`${username} joined with socket ${client.id}`);
     this.server.emit('systemMessage', `${username} joined the chat`);
-    this.updateUserList();
-    
-    return { status: 'success' };
-  }
-
-  private updateUserList() {
-    const userList = Array.from(this.clients.values()).map(u => u.username);
-    this.server.emit('userList', userList);
+    this.broadcastUserList();
   }
 
   @SubscribeMessage('sendMessage')
   handleMessage(
-    @MessageBody() payload: { id: string, message: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    const user = this.clients.get(client.id);
-    if (!user) {
-      throw new WsException('User not registered');
-    }
+    client: Socket,
+    payload: { id: string; message: string }
+  ): void {
+    const username = this.users.get(client.id);
+    if (!username) return;
 
-    const now = Date.now();
-    if (now - user.lastMessageTime < 1000) {
-      throw new WsException('You are sending messages too quickly.');
-    }
-
-    if (!payload.message || typeof payload.message !== 'string' || payload.message.trim() === '') {
-      throw new WsException('Message cannot be empty');
-    }
-
-    user.lastMessageTime = now;
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    // Broadcast to all EXCEPT the sender
-    client.broadcast.emit('receiveMessage', {
+    const msg = {
       id: payload.id,
-      sender: user.username,
+      sender: username,
       message: payload.message,
-      time
-    });
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    this.server.emit('receiveMessage', msg);
   }
 
   @SubscribeMessage('typing')
-  handleTyping(@MessageBody() payload: { username: string }, @ConnectedSocket() client: Socket) {
-    const user = this.clients.get(client.id);
-    if (user) {
-      client.broadcast.emit('typing', { username: user.username });
-    }
+  handleTyping(client: Socket, payload: { username: string }) {
+    client.broadcast.emit('typing', payload);
+  }
+
+  @SubscribeMessage('deleteMessage')
+  handleDeleteMessage(client: Socket, payload: { messageId: string }) {
+    this.server.emit('deleteMessage', payload);
+  }
+
+  private broadcastUserList() {
+    const usernames = [...this.sockets.keys()];
+    this.server.emit('userList', usernames);
   }
 }

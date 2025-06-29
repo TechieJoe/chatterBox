@@ -11,6 +11,10 @@ async function bootstrap() {
   app.enableCors({ origin: '*' });
   app.use(compression());
 
+  app.enableCors({
+    origin: '*', // Adjust this in production for security
+  });
+  
   // Serve static assets
   const publicPath = join(__dirname, '..', 'public');
   app.useStaticAssets(publicPath);
