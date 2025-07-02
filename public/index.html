@@ -23,8 +23,6 @@
       --offline: #f44336;
       --background: #f8f9fa;
       --delete-color: #ff6b6b;
-      --sidebar-width: 280px;
-      --mobile-header-height: 60px;
     }
     
     * {
@@ -36,16 +34,16 @@
     
     body {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 15px;
+      padding: 20px;
     }
     
     .chat-container {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1000px;
       height: 90vh;
       background: white;
       border-radius: 20px;
@@ -59,12 +57,11 @@
     .chat-header {
       background: linear-gradient(to right, var(--primary), var(--primary-dark));
       color: white;
-      padding: 15px 20px;
+      padding: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: relative;
-      min-height: 70px;
     }
     
     .logo {
@@ -75,7 +72,7 @@
     
     .logo h1 {
       font-weight: 600;
-      font-size: 1.5rem;
+      font-size: 1.8rem;
     }
     
     .logo-icon {
@@ -104,18 +101,16 @@
       display: flex;
       flex: 1;
       overflow: hidden;
-      position: relative;
     }
     
     /* Sidebar */
     .sidebar {
-      width: var(--sidebar-width);
+      width: 280px;
       background: #f8f9fa;
       border-right: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: transform 0.3s ease;
     }
     
     .user-profile {
@@ -201,15 +196,11 @@
     
     .user-item .details {
       flex: 1;
-      min-width: 0;
     }
     
     .user-item .name {
       font-weight: 500;
       margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
     
     .user-item .status {
@@ -218,6 +209,13 @@
       display: flex;
       align-items: center;
       gap: 5px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--online);
     }
     
     /* Chat Area */
@@ -241,7 +239,7 @@
     }
     
     .message {
-      max-width: 85%;
+      max-width: 75%;
       padding: 15px;
       border-radius: 18px;
       position: relative;
@@ -300,8 +298,6 @@
       border-radius: 20px;
       font-size: 0.85rem;
       margin: 10px 0;
-      text-align: center;
-      max-width: 90%;
     }
     
     .typing-indicator {
@@ -323,7 +319,6 @@
       border-top: 1px solid var(--border-color);
       display: flex;
       gap: 10px;
-      align-items: center;
     }
     
     .message-input {
@@ -354,7 +349,6 @@
       cursor: pointer;
       transition: transform 0.3s, box-shadow 0.3s;
       font-size: 1.1rem;
-      flex-shrink: 0;
     }
     
     .action-button:hover {
@@ -504,216 +498,126 @@
       margin-top: 10px;
     }
     
-    /* Mobile menu button */
-    .menu-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-      margin-right: 10px;
-    }
-    
     /* Responsive Design */
-    @media (max-width: 992px) {
+    @media (max-width: 768px) {
       .chat-container {
         height: 95vh;
         border-radius: 15px;
       }
       
-      .logo h1 {
-        font-size: 1.3rem;
-      }
-      
-      .message {
-        max-width: 80%;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
-      
-      .chat-container {
-        height: 100vh;
-        max-height: -webkit-fill-available;
-        border-radius: 0;
-      }
-      
-      .menu-toggle {
-        display: block;
-      }
-      
       .sidebar {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        z-index: 100;
-        transform: translateX(-100%);
-        box-shadow: 3px 0 15px rgba(0,0,0,0.1);
-      }
-      
-      .sidebar.active {
-        transform: translateX(0);
-      }
-      
-      .overlay {
-        display: none;
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.3);
-        z-index: 99;
-      }
-      
-      .sidebar.active ~ .overlay {
-        display: block;
+        width: 70px;
       }
       
       .user-profile .user-info,
       .online-users h3 span,
       .user-item .details {
-        display: block;
+        display: none;
       }
       
-      .user-item {
-        justify-content: flex-start;
-      }
-      
-      .chat-area {
-        width: 100%;
-      }
-      
-      .welcome-screen {
-        padding: 20px;
-      }
-      
-      .welcome-icon {
-        font-size: 3rem;
-      }
-      
-      .welcome-title {
-        font-size: 1.5rem;
-      }
-      
-      .welcome-text {
-        font-size: 0.95rem;
-      }
-      
-      .message {
-        max-width: 90%;
-      }
-    }
-    
-    @media (max-width: 576px) {
-      .chat-header {
-        padding: 12px 15px;
-        min-height: 60px;
-      }
-      
-      .logo h1 {
-        font-size: 1.2rem;
-      }
-      
-      .status-indicator {
-        font-size: 0.8rem;
-        padding: 4px 10px;
-      }
-      
-      .message {
-        max-width: 95%;
-        padding: 12px;
-      }
-      
-      .input-area {
+      .online-users {
         padding: 10px;
       }
       
-      .message-input {
-        padding: 10px 15px;
-        font-size: 0.95rem;
+      .user-item {
+        justify-content: center;
       }
       
-      .action-button {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
+      .message {
+        max-width: 85%;
       }
-      
-      .welcome-icon {
-        font-size: 2.5rem;
-      }
-      
-      .welcome-title {
-        font-size: 1.3rem;
-      }
-      
-      .start-button {
-        padding: 10px 25px;
-        font-size: 0.95rem;
-      }
-      
-      .form-input {
-        padding: 10px 12px;
-      }
-    }
-    
-    @media (max-width: 400px) {
-      .logo h1 {
-        font-size: 1.1rem;
-      }
-      
-      .status-indicator {
-        font-size: 0.75rem;
-      }
-      
-      .message-header {
-        font-size: 0.85rem;
-      }
-      
-      .message-content {
-        font-size: 0.9rem;
-      }
-    }
-    
-    /* Floating action button for mobile */
-    .fab {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: linear-gradient(to right, var(--primary), var(--primary-dark));
-      color: white;
-      border: none;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      z-index: 101;
-      cursor: pointer;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-    
-    @media (max-width: 768px) {
-      .fab {
-        display: flex;
-      }
+      @media (max-width: 1024px) {
+  .chat-container {
+    flex-direction: column;
+  }
+
+  .chat-main {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    height: auto;
+  }
+
+  .chat-area {
+    height: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .chat-container {
+    height: auto;
+    border-radius: 10px;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .user-item {
+    justify-content: flex-start;
+  }
+
+  .chat-messages {
+    padding: 10px;
+  }
+
+  .message {
+    max-width: 100%;
+  }
+
+  .input-area {
+    flex-direction: column;
+  }
+
+  .message-input {
+    width: 100%;
+    border-radius: 15px;
+  }
+
+  .action-button {
+    width: 100%;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .emoji-button {
+    order: 1;
+  }
+
+  .start-button {
+    width: 100%;
+  }
+
+  .username-form {
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .welcome-screen {
+    padding: 20px;
+  }
+
+  .server-info {
+    word-break: break-all;
+  }
+}
+
     }
   </style>
 </head>
 <body>
   <div class="chat-container">
     <div class="chat-header">
-      <button class="menu-toggle" id="menuToggle">
-        <i class="fas fa-bars"></i>
-      </button>
       <div class="logo">
         <i class="fas fa-comments logo-icon"></i>
         <h1>ChatterBox Pro</h1>
@@ -725,7 +629,7 @@
     </div>
     
     <div class="chat-main">
-      <div class="sidebar" id="sidebar">
+      <div class="sidebar">
         <div class="user-profile">
           <div class="user-avatar" id="userAvatar">?</div>
           <div class="user-info">
@@ -738,39 +642,16 @@
           <h3><i class="fas fa-user-friends"></i> <span>Online Users</span></h3>
           <ul class="user-list" id="userList">
             <!-- Users will be added here dynamically -->
-            <li class="user-item">
-              <div class="avatar">J</div>
-              <div class="details">
-                <div class="name">John Doe</div>
-                <div class="status"><span class="status-dot" style="background-color: var(--online)"></span> Online</div>
-              </div>
-            </li>
-            <li class="user-item">
-              <div class="avatar">S</div>
-              <div class="details">
-                <div class="name">Sarah Johnson</div>
-                <div class="status"><span class="status-dot" style="background-color: var(--online)"></span> Online</div>
-              </div>
-            </li>
-            <li class="user-item">
-              <div class="avatar">M</div>
-              <div class="details">
-                <div class="name">Mike Thompson</div>
-                <div class="status"><span class="status-dot" style="background-color: var(--online)"></span> Online</div>
-              </div>
-            </li>
           </ul>
         </div>
       </div>
-      
-      <div class="overlay" id="overlay"></div>
       
       <div class="chat-area">
         <div class="chat-messages" id="chatMessages">
           <div class="welcome-screen" id="welcomeScreen">
             <i class="fas fa-comment-dots welcome-icon"></i>
             <h2 class="welcome-title">Welcome to ChatterBox Pro</h2>
-            <p class="welcome-text">Enter your username to start chatting with people around the world in real-time</p>
+            <p class="welcome-text">Enter your username to start chatting</p>
             
             <div class="username-form">
               <div class="form-group">
@@ -784,37 +665,9 @@
               </button>
               
               <div class="server-info">
-                <i class="fas fa-server"></i> Connecting to: <span id="serverUrl">https://chatterbox-dph2.onrender.com</span>
+                <i class="fas fa-server"></i> Connecting to: <span id="serverUrl">http://localhost:3000</span>
               </div>
             </div>
-          </div>
-          
-          <!-- Demo messages for preview -->
-          <div class="message receiver">
-            <div class="message-header">
-              <span class="sender-name">John Doe</span>
-              <span class="message-time">10:30 AM</span>
-            </div>
-            <div class="message-content">Hey there! How are you doing today?</div>
-          </div>
-          
-          <div class="message sender">
-            <div class="message-header">
-              <span class="sender-name">You</span>
-              <span class="message-time">10:32 AM</span>
-            </div>
-            <div class="message-content">I'm doing great! Just testing out this awesome chat app.</div>
-            <button class="delete-btn"><i class="fas fa-trash"></i></button>
-          </div>
-          
-          <div class="system-message">Sarah Johnson has joined the chat</div>
-          
-          <div class="message receiver">
-            <div class="message-header">
-              <span class="sender-name">Sarah Johnson</span>
-              <span class="message-time">10:35 AM</span>
-            </div>
-            <div class="message-content">Hello everyone! This interface looks amazing on my phone!</div>
           </div>
         </div>
         
@@ -833,10 +686,6 @@
         </div>
       </div>
     </div>
-    
-    <button class="fab" id="fabButton">
-      <i class="fas fa-comment-alt"></i>
-    </button>
   </div>
 
   <script>
@@ -858,10 +707,6 @@
     const welcomeScreen = document.getElementById('welcomeScreen');
     const emojiButton = document.getElementById('emojiButton');
     const serverUrlDisplay = document.getElementById('serverUrl');
-    const menuToggle = document.getElementById('menuToggle');
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
-    const fabButton = document.getElementById('fabButton');
     
     // Chat state
     let username = '';
@@ -870,23 +715,9 @@
     let users = [];
     let typingTimeout;
     let messageCounter = 0;
-    const SERVER_URL = "https://chatterbox-dph2.onrender.com"; 
-    
+    const SERVER_URL = "https://chatterbox-dph2.onrender.com"; // <-- CHANGE THIS!
     // Set server URL display
     serverUrlDisplay.textContent = SERVER_URL;
-    
-    // Mobile sidebar toggle
-    menuToggle.addEventListener('click', () => {
-      sidebar.classList.toggle('active');
-    });
-    
-    overlay.addEventListener('click', () => {
-      sidebar.classList.remove('active');
-    });
-    
-    fabButton.addEventListener('click', () => {
-      messageInput.focus();
-    });
     
     // Update connection status
     function updateStatus(text, color) {
@@ -1149,21 +980,6 @@
     
     // Initialize the app
     updateStatus('Disconnected', 'red');
-    
-    // Demo functionality for the preview
-    document.addEventListener('DOMContentLoaded', () => {
-      // Simulate a user connecting
-      setTimeout(() => {
-        document.getElementById('welcomeScreen').style.display = 'none';
-        document.getElementById('usernameDisplay').textContent = 'Alex';
-        document.getElementById('userAvatar').textContent = 'A';
-        document.getElementById('userStatus').textContent = 'Online';
-        document.getElementById('statusText').textContent = 'Connected';
-        document.getElementById('statusDot').style.backgroundColor = 'green';
-        document.getElementById('messageInput').disabled = false;
-        document.getElementById('sendButton').disabled = false;
-      }, 1000);
-    });
   </script>
 </body>
 </html>
