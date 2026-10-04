@@ -1,0 +1,124 @@
+
+```markdown
+# ChatterBox – Real-Time Messaging Application
+
+A real-time chat application built with **NestJS** and **Socket.IO**.  
+It enables instant messaging between connected users, online presence tracking, and the ability for users to delete their own messages.
+
+---
+
+## Features
+
+- Real-time bidirectional communication using WebSockets
+- Online user presence tracking
+- System messages when users join or leave
+- Users can delete only their own messages
+- Event-driven architecture
+- Clean implementation using NestJS WebSocket Gateway
+- CORS enabled for easy frontend connection
+
+---
+
+## Tech Stack
+
+| Category       | Technology                                      |
+|----------------|-------------------------------------------------|
+| Framework      | NestJS                                          |
+| Real-time      | Socket.IO (`@nestjs/websockets`, `@nestjs/platform-socket.io`) |
+| Language       | TypeScript                                      |
+| Documentation  | Swagger (optional)                              |
+
+---
+
+## How It Works
+
+The core logic lives inside the WebSocket Gateway:
+
+1. Clients connect to the Socket.IO server
+2. Users join the chat by sending a `join` event with their username
+3. Messages are broadcast to all connected clients in real time
+4. The list of online users is updated whenever someone joins or leaves
+5. Users can emit a delete event to remove their own messages
+
+---
+
+## Project Structure
+
+src/
+├── gateway/
+│   └── web-socket.gateway.ts     # Main Socket.IO Gateway
+├── controller/
+│   └── web-socket.ts
+├── module/
+│   └── web-socket.module.ts
+├── app.module.ts
+└── main.ts
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js v18 or higher
+- Git
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/TechieJoe/chatterBox.git
+
+# Navigate into the project
+cd chatterBox
+
+# Install dependencies
+npm install
+
+# Running the Application
+
+# Development mode
+npm run start:dev
+
+# Production mode
+npm run build
+
+The server will start on the default port (usually 3000).
+You can connect any Socket.IO client or frontend application to the WebSocket endpoint.
+
+# Main Socket Events
+
+Event           Direction           Description
+join           Client → Server    User joins the chat with a username
+sendMessage    Client → Server     Send a chat message
+systemMessage  Server → Client     System notifications (join/leave)
+userList       Server → Client      Updated list of currently online users
+deleteMessage  Client → Server    Delete a message owned by the user
+npm run start:prod
+
+# Example Client Connection (JavaScript)
+
+const socket = io('http://localhost:3000');
+
+// Join the chat
+socket.emit('join', 'JohnDoe');
+
+// Send a message
+socket.emit('sendMessage', {
+  id: Date.now().toString(),
+  message: 'Hello everyone!'
+});
+
+// Listen for messages
+socket.on('systemMessage', (msg) => {
+  console.log('System:', msg);
+});   
+
+# Author
+Kelechi Tochukwu Joseph
+
+Backend Developer | NestJS | TypeScript
+
+GitHub: TechieJoe
+LinkedIn: kelechi-tochukwu
+Email: kelechijoseph624@gmail.com
